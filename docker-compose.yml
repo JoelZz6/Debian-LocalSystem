@@ -1,0 +1,30 @@
+services:
+  db:
+    image: postgres:15
+    container_name: postgres_db
+    restart: always
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: LectorPB
+    ports:
+      - "5436:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d LectorPB"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    ports:
+    - "3006:3006"
+    build: .
+    container_name: nest_backend
+    restart: always
+    environment:
+      DATABASE_HOST: db # Esto le dice a Nest que busque el servicio 'db'
+    depends_on:
+      db:
+        condition: service_healthy
+    stdin_open: true 
+    tty: true
