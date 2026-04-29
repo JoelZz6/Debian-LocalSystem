@@ -9,6 +9,8 @@ services:
       POSTGRES_DB: LectorPB
     ports:
       - "5436:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U user -d LectorPB"]
       interval: 5s
@@ -21,6 +23,10 @@ services:
     build: .
     container_name: nest_backend
     restart: always
+    devices:
+      - "/dev/input/by-id/usb-0581_011c-event-kbd:/dev/input/lector_usb"
+    group_add:
+      - input
     environment:
       DATABASE_HOST: db # Esto le dice a Nest que busque el servicio 'db'
     depends_on:
@@ -28,3 +34,5 @@ services:
         condition: service_healthy
     stdin_open: true 
     tty: true
+    volumes:
+      postgres_data:

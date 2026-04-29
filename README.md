@@ -1,98 +1,176 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+###### PASOS PARA TENERLO BIEN CONFIGURADO EN OTRAS PC
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+# 1. Actualizar Debian (COMO SUPERUSUARIO)
+  apt update
+  apt upgrade
+  apt full-upgrade
+  apt autoremove
+  /usr/sbin/reboot
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+# 2. Instalar Docker Engine + el plugin Docker Compose V2 (TODO EN SU PAGINA OFICIAL, CAMBIA CON EL TIEMPO)
+    LINK ---> https://docs.docker.com/engine/install/debian/
+  # PASOS
+      - Verificar los Requisitos del sistema operativo
+      - Desinstala las versiones antiguas (SUPERUSUARIO)
+                apt remove $(dpkg --get-selections docker.io docker-compose docker-doc podman-docker containerd runc | cut -f1)
+      - Métodos de instalación
+        -- Instalar usando el apt repositorio (SUPERUSUARIO) --
+            PRIMER PASO. Configura apt el repositorio de Docker
+              # Add Docker's official GPG key:
+                apt update
+                apt install ca-certificates curl
+                install -m 0755 -d /etc/apt/keyrings
+                curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
+                chmod a+r /etc/apt/keyrings/docker.asc
 
-## Description
+              # Add the repository to Apt sources: (VA TODO JUNTO)
+                tee /etc/apt/sources.list.d/docker.sources <<EOF
+                Types: deb
+                URIs: https://download.docker.com/linux/debian
+                Suites: $(. /etc/os-release && echo "$VERSION_CODENAME")
+                Components: stable
+                Architectures: $(dpkg --print-architecture)
+                Signed-By: /etc/apt/keyrings/docker.asc
+                EOF
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+                apt update
+            SEGUNDO PASO. Instala los paquetes de Docker
+                apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+      - Tras la instalación, verifique que Docker se esté ejecutando
+          systemctl status docker 
+      - Si Docker no se está ejecutando, inícielo manualmente
+          systemctl start docker
+      - Verifique que la instalación se haya realizado correctamente ejecutando la hello-worldimagen
+          docker run hello-world
 
-## Project setup
+# 3. Agregar tu usuario al grupo docker (entrar a SUPERUSUSARIO con "su -" ya que si hacemos solo "su" sin el guión no se cargan las rutas de administración (/usr/sbin))
+  LINK --->  https://docs.docker.com/engine/install/linux-postinstall/
+    su -
+    usermod -aG docker baal
+  # SALIR DE SU -, PARA CONTINUAR
+    exit
+    newgrp docker
+  # PRUEBA
+    docker ps
 
-```bash
-$ npm install
-```
+# 4. INSTALAR GIT EN DEBIAN (PARA CLONAR REPOSITORIOS)
+    apt install git -y
+  # Generar un Token en GitHub (Desde tu Windows)
+      Como la terminal te pedirá una contraseña, debes usar un Token:
+          - Ve a tu GitHub en el navegador: Settings > Developer Settings > Personal access tokens > Tokens (classic).
+          - Haz clic en Generate new token (classic).
+          - Dale un nombre (ej. "Debian-Server") y marca la casilla repo (esto da acceso a tus repositorios privados).
+          - Copia el token y guárdalo bien, porque no volverás a verlo.
+  # Clonar el Repositorio
+      git clone https://github.com/TU_USUARIO/TU_REPOSITORIO.git
+          Cuando te pida credenciales:
+          - Username: Tu nombre de usuario de GitHub.
+          - Password: Pega el Token que generaste en el paso anterior (no verás caracteres mientras pegas, es normal).
 
-## Compile and run the project
+# 5. SOBRE EL HARDWARE
+  - Verificar la ruta del lector de barras
+      Conecta el lector y verifica que aparezca en /dev/input/by-id/ con el nombre exacto que tiene en scanner_bridge.py
+  - Crear regla udev para el lector
+      En lugar de correr el script como root, investiga cómo crear una regla en /etc/udev/rules.d/ que le dé permisos al grupo input sobre ese dispositivo USB específico. Luego agrega tu usuario baal a ese grupo.
+      -- PASOS --
+      1. Obtener los IDs del dispositivo:
+          Para configurar el lector sin usar root, necesitamos identificar los IDs de fabricante (vendor) y producto (product) del
+          dispositivo y luego crear la regla.
+                  udevadm info -a -n /dev/input/by-id/usb-0581_011c-event-kbd | grep -E "idVendor|idProduct" | head -n 2
+          Verás algo como: ATTRS{idVendor}=="0581" y ATTRS{idProduct}=="011c".
+      2. Crear la regla udev:
+          Como root (usa su -), crea el archivo de reglas:
+                  nano /etc/udev/rules.d/99-lector-usb.rules
+          Pega la siguiente línea (ajusta los números si los tuyos fueron distintos en el paso 1):
+                  SUBSYSTEM=="input", ATTRS{idVendor}=="0581", ATTRS{idProduct}=="011c", MODE="0660", GROUP="input"
+      3. Agregar tu usuario al grupo input:
+          Aún como root, dale permiso a tu usuario para acceder a dispositivos de entrada:
+                  usermod -aG input baal
+      4. Aplicar los cambios:
+          Para que el sistema reconozca la regla y el nuevo grupo sin reiniciar:
+          4.1. Recargar reglas:
+                  udevadm control --reload-rules && udevadm trigger
+          4.2. Desconecta y vuelve a conectar el lector USB
+          4.3. Actualizar grupo en la sesión actual (como usuario baal): (SIN SUPERUSUARIO)
+                  newgrp input
+      5. Verificación final
+          Siendo el usuario baal, intenta leer el dispositivo:
+                  cat /dev/input/by-id/usb-0581_011c-event-kbd
+          (Si al pasar una tarjeta o código salen caracteres extraños en la terminal, ¡ya tienes permiso directo! Presiona Ctrl+C para salir).
+  - Crear entorno virtual Python (venv)
+      En Debian moderno no puedes hacer pip install global. Investiga cómo crear un venv en una carpeta fija (por ejemplo /home/baal/scanner-env/) e instalar evdev y requests dentro de él.
+      # PASOS EN CONSOLA
+              # Como root (su -)
+                  apt update
+                  apt install python3-venv python3-pip
+              # Como tu usuario normal (baal): Crea la carpeta y el entorno en la ruta fija
+                  python3 -m venv /home/baal/scanner-env/
+              # Activa el entorno
+                  source /home/baal/scanner-env/bin/activate
+              # Ahora el prompt mostrará (scanner-env). Instala las librerías:
+                  pip install evdev requests
+# 6. Automatización con Systemd
+      GNU nano 8.4                           /etc/systemd/system/sistema-backend.service
+      ------------------------------------------------------------------------------
+                    [Unit]
+                    Description=NestJS Inventory Docker Service
+                    # Asegura que el servicio se detenga/reinicie si docker lo hace
+                    After=docker.service
+                    Requires=docker.service
+                    PartOf=docker.service
 
-```bash
-# development
-$ npm run start
+                    [Service]
+                    # Cambia esta ruta a la de tu proyecto real
+                    WorkingDirectory=/home/baal/Debian-LocalSystem
+                    # Usamos la ruta completa de docker para evitar errores de 'command not found'
+                    ExecStart=/usr/bin/docker compose up --build
+                    ExecStop=/usr/bin/docker compose down
+                    Restart=always
+                    # Opcional: Ejecutar como el usuario baal para mantener permisos de archivos
+                    User=baal
+                    Group=docker
 
-# watch mode
-$ npm run start:dev
+                    [Install]
+                    WantedBy=multi-user.target
+      ------------------------------------------------------------------------------
+            # Recargar systemd para que vea el nuevo servicio
+            systemctl daemon-reload
 
-# production mode
-$ npm run start:prod
-```
+            # Habilitar para que inicie solo al arrancar el PC
+            systemctl enable sistema-backend.service
 
-## Run tests
+            # Iniciar el servicio ahora mismo
+            systemctl start sistema-backend.service
 
-```bash
-# unit tests
-$ npm run test
+      GNU nano 8.4                            /etc/systemd/system/lector-barras.service *                  
+      ------------------------------------------------------------------------------                 
+                    [Unit]
+                    Description=Python Scanner Bridge
+                    # BindsTo asegura que si el backend se detiene, este servicio también.
+                    # After asegura que el lector intente arrancar DESPUÉS del backend.
+                    After=sistema-backend.service
+                    BindsTo=sistema-backend.service
 
-# e2e tests
-$ npm run test:e2e
+                    [Service]
+                    # Usamos el intérprete de Python que está DENTRO del entorno virtual
+                    ExecStart=/home/baal/scanner-env/bin/python3 /home/baal/Debian-LocalSystem/scanner_bridge.py
+                    WorkingDirectory=/home/baal/Debian-LocalSystem
+                    Restart=always
+                    # Gracias a la regla udev e 'input', ya no necesitamos root
+                    User=baal
+                    Group=input
 
-# test coverage
-$ npm run test:cov
-```
+                    [Install]
+                    WantedBy=multi-user.target
+      ------------------------------------------------------------------------------
+            systemctl daemon-reload
+            systemctl enable lector-barras.service
+            systemctl start lector-barras.service
 
-## Deployment
+# VERIFICAR QUE ESTEN ENCENDIDOS
+      systemctl status sistema-backend.service lector-barras.service
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+# LEVANTAR EL REPOSITORIO
+      cd TU_REPOSITORIO
+      docker compose up -d --build
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
-
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
