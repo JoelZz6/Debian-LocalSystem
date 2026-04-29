@@ -114,19 +114,18 @@
       ------------------------------------------------------------------------------
                     [Unit]
                     Description=NestJS Inventory Docker Service
-                    # Asegura que el servicio se detenga/reinicie si docker lo hace
-                    After=docker.service
-                    Requires=docker.service
+                    After=docker.service network-online.target
+                    Requires=docker.service network-online.target
                     PartOf=docker.service
 
                     [Service]
-                    # Cambia esta ruta a la de tu proyecto real
                     WorkingDirectory=/home/baal/Debian-LocalSystem
-                    # Usamos la ruta completa de docker para evitar errores de 'command not found'
-                    ExecStart=/usr/bin/docker compose up --build
+                    # Cambiamos 'up --build' por solo 'up' para arrancar más rápido en el boot
+                    ExecStart=/usr/bin/docker compose up
                     ExecStop=/usr/bin/docker compose down
                     Restart=always
-                    # Opcional: Ejecutar como el usuario baal para mantener permisos de archivos
+                    # Crucial: Esperar 10 segundos antes de cada reintento
+                    RestartSec=10
                     User=baal
                     Group=docker
 
@@ -146,17 +145,15 @@
       ------------------------------------------------------------------------------                 
                     [Unit]
                     Description=Python Scanner Bridge
-                    # BindsTo asegura que si el backend se detiene, este servicio también.
-                    # After asegura que el lector intente arrancar DESPUÉS del backend.
                     After=sistema-backend.service
                     BindsTo=sistema-backend.service
 
                     [Service]
-                    # Usamos el intérprete de Python que está DENTRO del entorno virtual
                     ExecStart=/home/baal/scanner-env/bin/python3 /home/baal/Debian-LocalSystem/scanner_bridge.py
                     WorkingDirectory=/home/baal/Debian-LocalSystem
                     Restart=always
-                    # Gracias a la regla udev e 'input', ya no necesitamos root
+                    # Esperar para que NestJS tenga tiempo de abrir el puerto 3006
+                    RestartSec=15
                     User=baal
                     Group=input
 
@@ -173,4 +170,5 @@
 # LEVANTAR EL REPOSITORIO
       cd TU_REPOSITORIO
       docker compose up -d --build
+
 

@@ -34,5 +34,6 @@ services:
         condition: service_healthy
     stdin_open: true 
     tty: true
-    volumes:
-      postgres_data:
+
+volumes:
+  postgres_data:
